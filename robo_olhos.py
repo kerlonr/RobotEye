@@ -1,3 +1,11 @@
+# =========================================================
+# CONFIGURAÇÃO FRAMEBUFFER (ANTES DO PYGAME)
+# =========================================================
+import os
+os.environ["SDL_VIDEODRIVER"] = "fbcon"
+os.environ["SDL_FBDEV"] = "/dev/fb0"
+os.environ["SDL_NOMOUSE"] = "1"
+
 import pygame
 import sys
 import random
@@ -8,14 +16,14 @@ import random
 pygame.init()
 
 # =========================================================
-# JANELA
+# JANELA (FRAMEBUFFER)
 # =========================================================
 FPS = 60
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 clock = pygame.time.Clock()
 
 WIDTH, HEIGHT = screen.get_size()
-pygame.display.set_caption("RoboEyes - Scanline Mode")
+pygame.display.set_caption("RoboEyes - Raspberry Pi")
 
 # =========================================================
 # CORES
@@ -25,10 +33,10 @@ EYE_COLOR = (4, 201, 253)
 TEXT_COLOR = (100, 100, 100)
 
 # =========================================================
-# CRT - SOMENTE SCANLINES
+# CRT - SOMENTE SCANLINES HORIZONTAIS
 # =========================================================
 CRT_ENABLED = True
-SCANLINE_ALPHA = 35   # intensidade das linhas
+SCANLINE_ALPHA = 35
 
 # =========================================================
 # OLHOS
@@ -113,10 +121,7 @@ def choose_random_look():
 def draw_eye(center_pos, blink_amount, look_offset):
     x, y = center_pos
 
-    current_height = int(
-        EYE_HEIGHT - (EYE_HEIGHT - BLINK_MIN_HEIGHT) * blink_amount
-    )
-
+    current_height = int(EYE_HEIGHT - (EYE_HEIGHT - BLINK_MIN_HEIGHT) * blink_amount)
     top_y = y - current_height // 2
 
     rect = pygame.Rect(
@@ -132,10 +137,6 @@ def draw_eye(center_pos, blink_amount, look_offset):
 
 def update_blink():
     global blink_progress, blink_timer
-
-    if space_held:
-        blink_progress = min(blink_progress + BLINK_CLOSE_SPEED, 1)
-        return
 
     blink_timer += 1
 
@@ -174,7 +175,7 @@ def update_sleep():
             sleep_phase = "sleeping"
 
     elif sleep_phase == "sleeping":
-        pass  # fica dormindo até apertar S
+        pass
 
     elif sleep_phase == "waking":
         blink_progress -= BLINK_OPEN_SPEED
@@ -217,60 +218,11 @@ def update_dizzy():
         state = STATE_NORMAL
 
 
-# =========================================================
-# SCANLINES (HORIZONTAIS)
-# =========================================================
 def draw_scanlines():
     line = pygame.Surface((WIDTH, 2), pygame.SRCALPHA)
     line.fill((0, 0, 0, SCANLINE_ALPHA))
-
     for y in range(0, HEIGHT, 4):
         screen.blit(line, (0, y))
-
-
-# =========================================================
-# EVENTOS
-# =========================================================
-def handle_events():
-    global space_held, state, sleeping, sleep_phase
-    global left_eye_blink, right_eye_blink, dizzy_timer
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            return False
-
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                return False
-
-            if event.key == pygame.K_SPACE:
-                space_held = True
-
-            if event.key == pygame.K_s:
-                if state != STATE_SLEEP:
-                    state = STATE_SLEEP
-                    sleeping = True
-                    sleep_phase = "closing"
-                else:
-                    sleeping = False
-                    sleep_phase = "waking"
-
-            if event.key == pygame.K_t:
-                state = STATE_DIZZY
-                left_eye_blink = right_eye_blink = 1.0
-                dizzy_timer = 0
-
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_SPACE:
-                space_held = False
-
-    return True
-
-
-def draw_help():
-    font = pygame.font.Font(None, 24)
-    txt = "SPACE: piscar | S: dormir/acordar | T: tonto | ESC: sair"
-    screen.blit(font.render(txt, True, TEXT_COLOR), (20, HEIGHT - 40))
 
 
 # =========================================================
@@ -279,7 +231,6 @@ def draw_help():
 def main():
     running = True
     while running:
-        running = handle_events()
         screen.fill(BG_COLOR)
 
         if state == STATE_NORMAL:
@@ -297,8 +248,6 @@ def main():
             update_dizzy()
             draw_eye(LEFT_EYE_BASE_POS, left_eye_blink, look_offset)
             draw_eye(RIGHT_EYE_BASE_POS, right_eye_blink, look_offset)
-
-        draw_help()
 
         if CRT_ENABLED:
             draw_scanlines()
