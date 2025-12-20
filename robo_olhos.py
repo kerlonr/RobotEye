@@ -11,7 +11,7 @@ FPS = 60
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF)
 clock = pygame.time.Clock()
 WIDTH, HEIGHT = screen.get_size()
-pygame.display.set_caption("RoboEyes - Optimized")
+pygame.display.set_caption("RoboEyes - Responsive")
 
 # =========================================================
 # CORES
@@ -21,19 +21,25 @@ EYE_COLOR = (4, 201, 253)
 TEXT_COLOR = (100, 100, 100)
 
 # =========================================================
-# CRT SCANLINES (simples, sem alpha pesado)
+# ESCALA PARA RESPONSIVIDADE
 # =========================================================
-CRT_ENABLED = True
-SCANLINE_COLOR = (0, 0, 0, 35)
+BASE_WIDTH = 2560
+BASE_HEIGHT = 1440
+SCALE_X = WIDTH / BASE_WIDTH
+SCALE_Y = HEIGHT / BASE_HEIGHT
+SCALE = min(SCALE_X, SCALE_Y)
+
+def sx(v): return int(v * SCALE)
+def sy(v): return int(v * SCALE)
 
 # =========================================================
 # OLHOS
 # =========================================================
-EYE_WIDTH = int(320 * 1.4)
-EYE_HEIGHT = int(320 * 1.4)
-BLINK_MIN_HEIGHT = 8
-BORDER_RADIUS = 100
-EYE_Y_OFFSET = -110
+EYE_WIDTH = sx(320 * 1.4)
+EYE_HEIGHT = sy(320 * 1.4)
+BLINK_MIN_HEIGHT = sy(8)
+BORDER_RADIUS = sy(100)
+EYE_Y_OFFSET = sy(-110)
 
 LEFT_EYE_BASE_POS = (WIDTH // 3, HEIGHT // 2 + EYE_Y_OFFSET)
 RIGHT_EYE_BASE_POS = (2 * WIDTH // 3, HEIGHT // 2 + EYE_Y_OFFSET)
@@ -52,7 +58,7 @@ sleeping = False
 # =========================================================
 blink_progress = 0.0
 blink_timer = 0
-blink_interval = 300
+blink_interval = int(300 / SCALE)
 
 BLINK_CLOSE_SPEED = 0.06
 BLINK_OPEN_SPEED = 0.05
@@ -63,17 +69,17 @@ WAKE_BLINK_OPEN_SPEED = 0.18
 space_held = False
 
 # =========================================================
-# OLHAR (agora igual à velocidade de WAKE_BLINK)
-LOOK_LEFT = -300
+# OLHAR
+LOOK_LEFT = sx(-300)
 LOOK_CENTER = 0
-LOOK_RIGHT = 300
+LOOK_RIGHT = sx(300)
 
-LOOK_SPEED = WAKE_BLINK_CLOSE_SPEED * 100  # ajustado para ficar igual a "acordar"
+LOOK_SPEED = WAKE_BLINK_CLOSE_SPEED * 100  # igual a velocidade de acordar
 look_offset = 0
 look_target = LOOK_CENTER
 last_look_target = None
 look_timer = 0
-LOOK_CHANGE_INTERVAL = 160
+LOOK_CHANGE_INTERVAL = int(160 / SCALE)
 
 # =========================================================
 # SLEEP
@@ -87,7 +93,7 @@ SLEEP_BLINKS = 2
 left_eye_blink = 1.0
 right_eye_blink = 1.0
 DIZZY_OPEN_SPEED = 0.015
-DIZZY_DELAY = 40
+DIZZY_DELAY = int(40 / SCALE)
 dizzy_timer = 0
 
 # =========================================================
@@ -202,9 +208,9 @@ def handle_events():
     return True
 
 def draw_help():
-    font = pygame.font.Font(None, 24)
+    font = pygame.font.Font(None, sy(24))
     txt = "SPACE: piscar | S: dormir/acordar | T: tonto | ESC: sair"
-    screen.blit(font.render(txt, True, TEXT_COLOR), (20, HEIGHT - 40))
+    screen.blit(font.render(txt, True, TEXT_COLOR), (sx(20), HEIGHT - sy(40)))
 
 # =========================================================
 # LOOP PRINCIPAL
