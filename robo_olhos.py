@@ -11,7 +11,7 @@ pygame.init()
 # JANELA
 # =========================================================
 FPS = 60
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF)
 clock = pygame.time.Clock()
 
 WIDTH, HEIGHT = screen.get_size()
@@ -44,7 +44,7 @@ CRT_ENABLED = True
 SCANLINE_ALPHA = 35
 
 # =========================================================
-# OLHOS (ESCALÁVEIS)
+# OLHOS
 # =========================================================
 EYE_WIDTH = sx(450)
 EYE_HEIGHT = sy(450)
@@ -81,7 +81,7 @@ WAKE_BLINK_OPEN_SPEED = 0.18
 space_held = False
 
 # =========================================================
-# OLHAR (ESCALÁVEL)
+# OLHAR
 # =========================================================
 LOOK_LEFT = sx(-300)
 LOOK_CENTER = 0
@@ -112,6 +112,46 @@ DIZZY_DELAY = int(40 / SCALE)
 dizzy_timer = 0
 
 # =========================================================
+# CACHE DOS OLHOS
+# =========================================================
+eye_cache = {}
+
+def get_eye_surface(blink_amount):
+    key = round(blink_amount, 2)
+    if key in eye_cache:
+        return eye_cache[key]
+
+    surf = pygame.Surface((EYE_WIDTH, EYE_HEIGHT), pygame.SRCALPHA)
+
+    current_height = int(
+        EYE_HEIGHT - (EYE_HEIGHT - BLINK_MIN_HEIGHT) * blink_amount
+    )
+
+    top_y = (EYE_HEIGHT - current_height) // 2
+    rect = pygame.Rect(0, top_y, EYE_WIDTH, current_height)
+
+    radius = 0 if current_height <= BLINK_MIN_HEIGHT + 2 else min(BORDER_RADIUS, current_height // 2)
+    pygame.draw.rect(surf, EYE_COLOR, rect, border_radius=radius)
+
+    eye_cache[key] = surf
+    return surf
+
+# =========================================================
+# SCANLINE OVERLAY
+# =========================================================
+def create_scanline_overlay():
+    overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+    line = pygame.Surface((WIDTH, 2), pygame.SRCALPHA)
+    line.fill((0, 0, 0, SCANLINE_ALPHA))
+
+    for y in range(0, HEIGHT, 4):
+        overlay.blit(line, (0, y))
+
+    return overlay
+
+SCANLINE_OVERLAY = create_scanline_overlay()
+
+# =========================================================
 # FUNÇÕES
 # =========================================================
 def choose_random_look():
@@ -124,22 +164,12 @@ def choose_random_look():
 
 def draw_eye(center_pos, blink_amount, look_offset):
     x, y = center_pos
-
-    current_height = int(
-        EYE_HEIGHT - (EYE_HEIGHT - BLINK_MIN_HEIGHT) * blink_amount
+    eye = get_eye_surface(blink_amount)
+    screen.blit(
+        eye,
+        (int(x - EYE_WIDTH // 2 + look_offset),
+         int(y - EYE_HEIGHT // 2))
     )
-
-    top_y = y - current_height // 2
-
-    rect = pygame.Rect(
-        int(x - EYE_WIDTH // 2 + look_offset),
-        top_y,
-        EYE_WIDTH,
-        current_height
-    )
-
-    radius = 0 if current_height <= BLINK_MIN_HEIGHT + 2 else min(BORDER_RADIUS, current_height // 2)
-    pygame.draw.rect(screen, EYE_COLOR, rect, border_radius=radius)
 
 def update_blink():
     global blink_progress, blink_timer
@@ -221,18 +251,6 @@ def update_dizzy():
     if left_eye_blink <= 0 and right_eye_blink <= 0:
         state = STATE_NORMAL
 
-# =========================================================
-# SCANLINES
-# =========================================================
-def draw_scanlines():
-    line = pygame.Surface((WIDTH, 2), pygame.SRCALPHA)
-    line.fill((0, 0, 0, SCANLINE_ALPHA))
-    for y in range(0, HEIGHT, 4):
-        screen.blit(line, (0, y))
-
-# =========================================================
-# EVENTOS
-# =========================================================
 def handle_events():
     global space_held, state, sleeping, sleep_phase
     global left_eye_blink, right_eye_blink, dizzy_timer
@@ -301,7 +319,7 @@ def main():
         draw_help()
 
         if CRT_ENABLED:
-            draw_scanlines()
+            screen.blit(SCANLINE_OVERLAY, (0, 0))
 
         pygame.display.flip()
         clock.tick(FPS)
