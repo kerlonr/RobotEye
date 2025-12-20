@@ -18,6 +18,19 @@ WIDTH, HEIGHT = screen.get_size()
 pygame.display.set_caption("RoboEyes - Scanline Mode")
 
 # =========================================================
+# RESOLUÇÃO BASE (2K COMO REFERÊNCIA)
+# =========================================================
+BASE_WIDTH = 2560
+BASE_HEIGHT = 1440
+
+SCALE_X = WIDTH / BASE_WIDTH
+SCALE_Y = HEIGHT / BASE_HEIGHT
+SCALE = min(SCALE_X, SCALE_Y)
+
+def sx(value): return int(value * SCALE)
+def sy(value): return int(value * SCALE)
+
+# =========================================================
 # CORES
 # =========================================================
 BG_COLOR = (0, 0, 0)
@@ -25,22 +38,22 @@ EYE_COLOR = (4, 201, 253)
 TEXT_COLOR = (100, 100, 100)
 
 # =========================================================
-# CRT - SOMENTE SCANLINES
+# CRT - SCANLINES
 # =========================================================
 CRT_ENABLED = True
-SCANLINE_ALPHA = 35   # intensidade das linhas
+SCANLINE_ALPHA = 35
 
 # =========================================================
-# OLHOS
+# OLHOS (ESCALÁVEIS)
 # =========================================================
-EYE_WIDTH = int(320 * 1.4)
-EYE_HEIGHT = int(320 * 1.4)
-BLINK_MIN_HEIGHT = 8
-BORDER_RADIUS = 100
-EYE_Y_OFFSET = -110
+EYE_WIDTH = sx(450)
+EYE_HEIGHT = sy(450)
+BLINK_MIN_HEIGHT = sy(10)
+BORDER_RADIUS = sx(120)
+EYE_Y_OFFSET = sy(-120)
 
-LEFT_EYE_BASE_POS = (WIDTH // 3, HEIGHT // 2 + EYE_Y_OFFSET)
-RIGHT_EYE_BASE_POS = (2 * WIDTH // 3, HEIGHT // 2 + EYE_Y_OFFSET)
+LEFT_EYE_BASE_POS = (WIDTH // 2 - sx(350), HEIGHT // 2 + EYE_Y_OFFSET)
+RIGHT_EYE_BASE_POS = (WIDTH // 2 + sx(350), HEIGHT // 2 + EYE_Y_OFFSET)
 
 # =========================================================
 # ESTADOS
@@ -57,7 +70,7 @@ sleeping = False
 # =========================================================
 blink_progress = 0.0
 blink_timer = 0
-blink_interval = 300
+blink_interval = int(300 / SCALE)
 
 BLINK_CLOSE_SPEED = 0.06
 BLINK_OPEN_SPEED = 0.05
@@ -68,18 +81,18 @@ WAKE_BLINK_OPEN_SPEED = 0.18
 space_held = False
 
 # =========================================================
-# OLHAR
+# OLHAR (ESCALÁVEL)
 # =========================================================
-LOOK_LEFT = -300
+LOOK_LEFT = sx(-300)
 LOOK_CENTER = 0
-LOOK_RIGHT = 300
+LOOK_RIGHT = sx(300)
 
-LOOK_SPEED = 6
+LOOK_SPEED = max(1, sx(6))
 look_offset = 0
 look_target = LOOK_CENTER
 last_look_target = None
 look_timer = 0
-LOOK_CHANGE_INTERVAL = 160
+LOOK_CHANGE_INTERVAL = int(160 / SCALE)
 
 # =========================================================
 # SLEEP
@@ -95,7 +108,7 @@ SLEEP_BLINKS = 2
 left_eye_blink = 1.0
 right_eye_blink = 1.0
 DIZZY_OPEN_SPEED = 0.015
-DIZZY_DELAY = 40
+DIZZY_DELAY = int(40 / SCALE)
 dizzy_timer = 0
 
 # =========================================================
@@ -108,7 +121,6 @@ def choose_random_look():
         options.remove(last_look_target)
     last_look_target = random.choice(options)
     return last_look_target
-
 
 def draw_eye(center_pos, blink_amount, look_offset):
     x, y = center_pos
@@ -129,7 +141,6 @@ def draw_eye(center_pos, blink_amount, look_offset):
     radius = 0 if current_height <= BLINK_MIN_HEIGHT + 2 else min(BORDER_RADIUS, current_height // 2)
     pygame.draw.rect(screen, EYE_COLOR, rect, border_radius=radius)
 
-
 def update_blink():
     global blink_progress, blink_timer
 
@@ -148,7 +159,6 @@ def update_blink():
     if blink_timer < blink_interval and blink_progress > 0:
         blink_progress = max(blink_progress - BLINK_OPEN_SPEED, 0)
 
-
 def update_look():
     global look_offset, look_target, look_timer
 
@@ -162,7 +172,6 @@ def update_look():
     elif look_offset > look_target:
         look_offset = max(look_offset - LOOK_SPEED, look_target)
 
-
 def update_sleep():
     global blink_progress, sleep_phase, sleep_blink_count
     global wake_blink_phase, state
@@ -172,9 +181,6 @@ def update_sleep():
         if blink_progress >= 1:
             blink_progress = 1
             sleep_phase = "sleeping"
-
-    elif sleep_phase == "sleeping":
-        pass  # fica dormindo até apertar S
 
     elif sleep_phase == "waking":
         blink_progress -= BLINK_OPEN_SPEED
@@ -201,7 +207,6 @@ def update_sleep():
             state = STATE_NORMAL
             sleep_phase = "closing"
 
-
 def update_dizzy():
     global left_eye_blink, right_eye_blink, dizzy_timer, state
 
@@ -216,17 +221,14 @@ def update_dizzy():
     if left_eye_blink <= 0 and right_eye_blink <= 0:
         state = STATE_NORMAL
 
-
 # =========================================================
-# SCANLINES (HORIZONTAIS)
+# SCANLINES
 # =========================================================
 def draw_scanlines():
     line = pygame.Surface((WIDTH, 2), pygame.SRCALPHA)
     line.fill((0, 0, 0, SCANLINE_ALPHA))
-
     for y in range(0, HEIGHT, 4):
         screen.blit(line, (0, y))
-
 
 # =========================================================
 # EVENTOS
@@ -266,12 +268,10 @@ def handle_events():
 
     return True
 
-
 def draw_help():
-    font = pygame.font.Font(None, 24)
-    txt = "SPACE: piscar | S: dormir/acordar | T: tonto | ESC: sair"
-    screen.blit(font.render(txt, True, TEXT_COLOR), (20, HEIGHT - 40))
-
+    font = pygame.font.Font(None, sy(24))
+    txt = "SPACE: piscar | S: dormir | T: tonto | ESC: sair"
+    screen.blit(font.render(txt, True, TEXT_COLOR), (sx(20), HEIGHT - sy(40)))
 
 # =========================================================
 # LOOP PRINCIPAL
@@ -308,7 +308,6 @@ def main():
 
     pygame.quit()
     sys.exit()
-
 
 if __name__ == "__main__":
     main()
