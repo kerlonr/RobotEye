@@ -38,6 +38,9 @@ echo "[4/4] Habilitando Bluetooth... (Futuro)"
 sudo systemctl enable bluetooth
 sudo systemctl start bluetooth
 
+
+cd ~/RobotEye
+
 # Finalização
 echo "======================================"
 echo "    Setup concluído com sucesso!"
