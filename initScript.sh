@@ -3,7 +3,7 @@
 set -e
 
 echo "======================================"
-echo "        ROBOT EYE - SETUP"
+echo "        ROBOT EYE - SETUP 1.0"
 echo "======================================"
 
 
