@@ -8,22 +8,20 @@ echo "======================================"
 
 
 # Atualização básica do sistema
-echo "[1/6] Atualizando sistema..."
+echo "[1/4] Atualizando sistema..."
 sudo apt update
 sudo apt upgrade -y
 
 
 # Dependências do sistema
-echo "[2/6] Instalando dependências do sistema..."
+echo "[2/4] Instalando dependências do sistema..."
 sudo apt install -y \
-    python3 \
-    python3-pip \
-    python3-venv \
+    python3-pygame \
     git \
     xserver-xorg \
 
 # Clone do repositório
-echo "[3/6] Clonando repositório RobotEye..."
+echo "[3/4] Clonando repositório RobotEye..."
 
 cd ~
 if [ -d "RobotEye" ]; then
@@ -35,16 +33,8 @@ else
     cd RobotEye
 fi
 
-# Dependências Python
-echo "[4/5] Instalando dependências Python..."
-
-python3 -m venv venv
-source venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-
 # Bluetooth
-echo "[5/5] Habilitando Bluetooth... (Futuro)"
+echo "[4/4] Habilitando Bluetooth... (Futuro)"
 sudo systemctl enable bluetooth
 sudo systemctl start bluetooth
 
