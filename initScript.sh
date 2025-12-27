@@ -37,6 +37,7 @@ fi
 echo "[4/4] Habilitando Bluetooth... (Futuro)"
 sudo systemctl enable bluetooth
 sudo systemctl start bluetooth
+sudo rfkill unblock bluetooth
 
 
 cd ~/RobotEye
