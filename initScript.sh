@@ -19,6 +19,8 @@ sudo apt install -y \
     python3-pygame \
     git \
     xserver-xorg \
+    python3-requests \
+
 
 # Clone do repositório
 echo "[3/4] Clonando repositório RobotEye..."
@@ -35,9 +37,13 @@ fi
 
 # Bluetooth
 echo "[4/4] Habilitando Bluetooth... (Futuro)"
+sudo apt install -y pulseaudio pulseaudio-module-bluetooth
 sudo systemctl enable bluetooth
 sudo systemctl start bluetooth
 sudo rfkill unblock bluetooth
+
+sudo systemctl enable bluetooth
+sudo systemctl start bluetooth
 
 
 cd ~/RobotEye
